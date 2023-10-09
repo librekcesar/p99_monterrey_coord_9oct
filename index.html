@@ -147,28 +147,23 @@ var geojsonLayer = L.geoJSON(centro, {
 
 //Terecer intento
 
-var puntosGeoJSON = L.geoJSON(centrmont).addTo(map);
+var geojsonLayer = L.geoJSON(centrmont, {
+    onEachFeature: function (feature, layer) {
+        // Agregar etiquetas permanentes a cada punto
+        var label = L.divIcon({ className: 'custom-label', html: feature.properties.id });
+        layer.setIcon(label);
+    }
+}).addTo(map);
 
-
-puntosGeoJSON.eachLayer(function (layer) {
-    var properties = layer.feature.properties; // Propiedades del GeoJSON
-    var tooltipContent = "Id: " + properties.id; // Personaliza el contenido del tooltip aquí
-    layer.bindTooltip(tooltipContent, { permanent: true, direction: "auto", opacity: 0.6 });
+// Controlar el tamaño de las etiquetas en función del zoom
+map.on('zoomend', function () {
+    var zoomLevel = map.getZoom();
+    geojsonLayer.eachLayer(function (layer) {
+        var icon = layer.getIcon();
+        icon.options.iconSize = [Math.min(20, zoomLevel * 2), Math.min(20, zoomLevel * 2)]; // Ajusta el tamaño máximo
+        layer.setIcon(icon);
+    });
 });
-
-
-puntosGeoJSON.eachLayer(function (layer) {
-    layer.openTooltip();
-});
-
-
-var options = {
-  hideOnZoom: 13, // Oculta las etiquetas cuando el zoom es igual o mayor a 13
-  hideOnMove: false, // No oculta las etiquetas cuando se mueve el mapa
-};
-
-puntosGeoJSON.addLayer(L.control.zoomHide(options));
-
 
 
 
