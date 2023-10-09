@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+<head>
+    <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+	 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css"/>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script> <!--enlace para el buscador de coordenadas-->
+    
+<!--Librerías para llamar la función cluster map-->
+<!--<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.5.0/MarkerCluster.Default.css" />
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.5.0/leaflet.markercluster.js"></script>
+	
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+     hasta aca estan las librerias de cluster -->
+    
+	 <!--Enclaces a las carpetas del buscador-->
+
+     <script src="leaflet-search-master\src\leaflet-search.js"></script>
+     <link rel="stylesheet" href="leaflet-search-master\src\leaflet-search.css" />
+     <script src="https://unpkg.com/leaflet-control-geocoder@1.13.0/dist/Control.Geocoder.js"></script>  <!--enlace para llamar el plugin del buscador de coordenadas-->
+     <script src="cuadri_mont_6oct_copia.js"></script>
+     <script src="centr_mont_copia.js"></script>
+     
+	 
+<!--Objeto Div que incluye la apariencia del marco del mapa-->
+ <style>
+  #map { 
+	  width: 100%;
+	  height: 900px;
+	  box-shadow: 5px 5px 5px #888;
+  }
+
+
+
+
+ </style>
+ 
+ </head>
+  <body>
+   <div id="map"></div><!--Objeto div que inserta el mapa-->
+
+  
+<!---->
+
+ <script>
+
+var datos = monter;  
+ 
+ var map = L.map("map").setView([25.708389, -100.3002789], 13);
+	
+	//Esta linea añade un mapa base o las capas de openstreet map en este caso
+    L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+        maxZoom: 18
+      }).addTo(map);
+
+
+
+
+
+
+
+
+
+
+//función para mostrar los atributos de la capa 
+      var featuresLayer = new L.GeoJSON(datos, {
+        style: function(feature) {
+            return { color: feature.properties.color };
+        },
+        onEachFeature: function(feature, marker) {
+            var popupContent = '<h4 style="color:' + feature.properties.color + '">' +
+                               'ID: ' + feature.properties.id + '</h4>' +
+                               'NUMPOINTS: ' + feature.properties.NUMPOINTS;
+            marker.bindPopup(popupContent).addTo(map);  //recuerda siempre agregar el add.To(map) por esa razon no lo cargaba en el mapa 
+        }
+    });
+
+
+
+
+
+
+
+      L.Control.geocoder().addTo(map);  
+
+      
+  
+      
+      var geocoder = L.Control.geocoder({
+  defaultMarkGeocode: false
+})
+  .on('markgeocode', function(e) {
+    var bbox = e.geocode.bbox;
+    var poly = L.polygon([
+      bbox.getSouthEast(),
+      bbox.getNorthEast(),
+      bbox.getNorthWest(),
+      bbox.getSouthWest()
+    ]).addTo(map);
+    map.fitBounds(poly.getBounds());
+  })
+  .addTo(map);     
+      
+//codigo para cargar puntos, si funcionó, si muestra los puntos, pero no muestra las etiquetas
+/*
+  var geoJSONLayer = L.geoJSON(centro).addTo(map); //Carga el geojson al mapa 
+
+geoJSONLayer.eachLayer(function (layer) {
+  // Obtén los datos que quieres mostrar en la etiqueta
+  var properties = layer.feature.properties; //crea una variable para llamar los atributos 
+
+  // Crea una etiqueta fija con la función tooltip crea las etiquetas 
+  var label = L.tooltip({
+    permanent: true, // Esto hace que la etiqueta sea permanente
+    direction: 'center', // Puedes ajustar la dirección según tus necesidades
+     // Agrega una clase CSS personalizada si lo deseas
+    
+    
+  });
+
+  // Agrega el contenido de la etiqueta
+  label.setContent(properties.id); // Cambia "nombre" al campo que deseas mostrar
+
+  // Asigna la etiqueta a la capa
+  layer.bindTooltip(label).openTooltip();
+});   */
+
+////segundo intento de poner etiquetas al punto, si funciona pero muestra las etiquetas hasta que pasas el mouse en el punto
+
+/*
+
+var geojsonLayer = L.geoJSON(centro, {
+    onEachFeature: function (feature, layer) {
+        // Agregar etiqueta fija al punto
+        layer.bindTooltip('Id: ' + feature.properties.id).openTooltip();
+    }
+}).addTo(map);   
+
+*/
+
+//Terecer intento
+
+var puntosGeoJSON = L.geoJSON(centrmont).addTo(map);
+
+
+puntosGeoJSON.eachLayer(function (layer) {
+    var properties = layer.feature.properties; // Propiedades del GeoJSON
+    var tooltipContent = "Id: " + properties.id; // Personaliza el contenido del tooltip aquí
+    layer.bindTooltip(tooltipContent, { permanent: true, direction: "auto", opacity: 0.6 });
+});
+
+
+puntosGeoJSON.eachLayer(function (layer) {
+    layer.openTooltip();
+});
+
+
+var options = {
+  hideOnZoom: 13, // Oculta las etiquetas cuando el zoom es igual o mayor a 13
+  hideOnMove: false, // No oculta las etiquetas cuando se mueve el mapa
+};
+
+puntosGeoJSON.addLayer(L.control.zoomHide(options));
+
+
+
+
+ </script>
+ </body> 
+ </html>
